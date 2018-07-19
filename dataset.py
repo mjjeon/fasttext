@@ -24,6 +24,7 @@ class Dataset(object):
         # for x in self.train_text:
         #     words.update([y for y in self.tokens(x[0])])
         self.bow_size = len(self.hasher.vocabulary_)
+        print(self.hasher.vocabulary_)
         # return list(words)
         return self.hasher.vocabulary_
 
@@ -44,7 +45,7 @@ class Dataset(object):
     def sampling_dataset(self, dataset_path):
         samples_by_category = dict()
         self.category_to_idx = dict()
-        with open(dataset_path, "rt", encoding='latin-1') as f:
+        with open(dataset_path, "r", errors = 'surrogateescape') as f:
             rows = f.read().split("\\N")
             for row in rows:
                 if row != "":
@@ -104,14 +105,15 @@ class Dataset(object):
 
 
 
-    def tokens(self, doc):
-        """Extract tokens from doc.
-
-        This uses a simple regex to break strings into tokens. For a more
-        principled approach, see CountVectorizer or TfidfVectorizer.
-        """
-        return (tok.lower() for tok in re.findall(r"\w+", doc))
-
+    # def tokens(self, doc):
+    #     """Extract tokens from doc.
+    #
+    #     This uses a simple regex to break strings into tokens. For a more
+    #     principled approach, see CountVectorizer or TfidfVectorizer.
+    #     """
+    #     # return (tok.lower() for tok in re.findall(r"\w+", doc))
+    #
+    #     return (tok.lower() for tok in doc.split(" "))
 
     def convert_to_one_hot(self, Y):
         n_values = np.max(Y) + 1
@@ -144,7 +146,7 @@ class Dataset(object):
 
         for sample in samples:
             a = hasher.transform([sample[0]])
-            a = a/a.sum()
+            a = a/a.max()
 
             samples_idx_version.append(a)
             if sample[1] in self.class_dict:
@@ -171,6 +173,7 @@ if __name__ == "__main__":
     dataset_save_path = "./dataset/AG/dataset.pickle"
     dataset = Dataset(dataset_path)
     dataset.process(n_gram=1)
+    print("bag of word size", dataset.bow_size)
     # np.savetxt("tmp.csv",dataset.todense(dataset.train_idx_version), delimiter=",")
     pickle.dump(dataset, open(dataset_save_path, "wb"))
 

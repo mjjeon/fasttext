@@ -13,6 +13,17 @@ def load_dataset(path):
     return dataset
 
 
+def tokens(doc):
+    """Extract tokens from doc.
+
+    This uses a simple regex to break strings into tokens. For a more
+    principled approach, see CountVectorizer or TfidfVectorizer.
+    """
+    # return (tok.lower() for tok in re.findall(r"\w+", doc))
+
+    return (tok.lower() for tok in doc.split(" "))
+
+
 def define_bow(dataset):
     print("bag of words")
     words = set()
@@ -30,43 +41,8 @@ def string_vectorizer(sentence, bow):
 
     return sentence_onehot_vector_sum.T
 
-# def parse_dataset(dataset, bow):
-#     feature_size = len(bow)
-#     sample_size = len(dataset.train)
-#     parsed_sentences = np.zeros((feature_size, sample_size))
-#     labels = list()
-#     class_dict = dict()
-#     last_class_index = 0
-#
-#     for i in range(sample_size):
-#         parsed_sentences[:, i] = string_vectorizer(dataset.train[i], bow)
-#         if dataset.train[i][1] in class_dict:
-#             labels.append(class_dict[dataset.train[i][1]])
-#         else:
-#             class_dict[dataset.train[i][1]] = last_class_index
-#             labels.append(last_class_index)
-#             last_class_index += 1
-#
-#     return parsed_sentences, convert_to_one_hot(labels).T
-def tokens(doc):
-    """Extract tokens from doc.
-
-    This uses a simple regex to break strings into tokens. For a more
-    principled approach, see CountVectorizer or TfidfVectorizer.
-    """
-    return (tok.lower() for tok in re.findall(r"\w+", doc))
-
-
-def token_freqs(doc):
-    """Extract a dict mapping tokens from doc to their frequencies."""
-    freq = defaultdict(int)
-    for tok in tokens(doc):
-        freq[tok] += 1
-    return freq
-
 def parse_dataset(dataset, hasher, kth, batch_size):
 
-    # sample_size = len(dataset.train)
     a = hasher.transform(tokens(d[0]) for d in dataset.train[kth*batch_size:(kth+1)*batch_size])
     sample_size = a.shape[0]
     labels = list()
@@ -91,7 +67,6 @@ def convert_to_one_hot(Y):
 def read_data_batch(filename, batch_size = 8):
 
     X, Y = load_dataset(filename)
-    # bow = define_bow(X)
     batch_X, batch_Y = tf.train.batch([X, Y], batch_size = batch_size)
     return batch_X, batch_Y
 
@@ -108,5 +83,5 @@ if __name__ == "__main__":
     class_size = dataset.train_label.shape[0]
     print("feature size", hashing_trick, "h size", h_size, "class size", class_size)
     m = model(feature_size, h_size, class_size, dataset)
-    loss = m.train(model_name, batch_size=batch_size, epochs=5, learning_rate=0.001)
+    loss = m.train(model_name, batch_size=batch_size, epochs=5, learning_rate=0.01)
     print(loss)
